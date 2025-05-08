@@ -8,15 +8,15 @@ using System.Media;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Windows.Threading;
+using Eto.Forms;
+//using System.Windows.Threading;
 
 namespace UXM
 {
     public partial class FormMain : Form
     {
         private const string UPDATE_LINK = "https://www.nexusmods.com/eldenring/mods/1651?tab=files";
-        private static Properties.Settings settings = Properties.Settings.Default;
+        private static Properties.Settings settings = UXM.Properties.Settings.Default;
 
         private bool closing;
         private CancellationTokenSource cts;
@@ -26,6 +26,7 @@ namespace UXM
         {
             InitializeComponent();
 
+            Application.Instance.Terminating += settings.QuitSave;
             closing = false;
             cts = null;
             progress = new Progress<(double value, string status)>(ReportProgress);
@@ -34,47 +35,50 @@ namespace UXM
 
         private async void FormMain_Load(object sender, EventArgs e)
         {
-            Text = $"UXM {Application.ProductVersion} Selective Unpacker";
+            //Text = $"UXM {Application.ProductVersion} Selective Unpacker";
+            Title = $"UXM Selective Unpacker";
             EnableControls(true);
 
-            Location = settings.WindowLocation;
+            Location = new Eto.Drawing.Point(settings.WindowLocation.X, settings.WindowLocation.Y);
             if (settings.WindowSize.Width >= MinimumSize.Width && settings.WindowSize.Height >= MinimumSize.Height)
-                Size = settings.WindowSize;
+                Size = new Eto.Drawing.Size(settings.WindowSize.Width, settings.WindowSize.Height);
             if (settings.WindowMaximized)
-                WindowState = FormWindowState.Maximized;
+                WindowState = WindowState.Maximized;
 
-            string installPath = Util.TryGetGameInstallLocation(settings.ExePath.Replace("{0}", ""));
+            string installPath = Util.TryGetGameInstallLocation(settings.ExePath.Replace("{0}", "").Replace("\\", @"/"));
             if (!string.IsNullOrEmpty(installPath))
                 settings.ExePath = installPath;
 
             txtExePath.Text = settings.ExePath;
 
-            Octokit.GitHubClient gitHubClient = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("UXM-Selective-Unpack"));
-            try
-            {
-                Octokit.Release release = await gitHubClient.Repository.Release.GetLatest("Nordgaren", "UXM-Selective-Unpack");
-                if (Version.Parse(release.TagName) > Version.Parse(Application.ProductVersion))
-                {
-                    lblUpdate.Visible = false;
-                    LinkLabel.Link link = new LinkLabel.Link();
-                    link.LinkData = UPDATE_LINK;
-                    llbUpdate.Links.Add(link);
-                    llbUpdate.Visible = true;
-                }
-                else
-                {
-                    lblUpdate.Text = "App up to date";
-                }
-            }
-            catch (Exception ex) when (ex is HttpRequestException || ex is Octokit.ApiException || ex is ArgumentException)
-            {
-                lblUpdate.Text = "Update status unknown";
-            }
+            //Octokit.GitHubClient gitHubClient = new Octokit.GitHubClient(new Octokit.ProductHeaderValue("UXM-Selective-Unpack"));
+            //try
+            //{
+            //    Octokit.Release release = await gitHubClient.Repository.Release.GetLatest("Nordgaren", "UXM-Selective-Unpack");
+            //    if (Version.Parse(release.TagName) > Version.Parse(Application.ProductVersion))
+            //    {
+            //        lblUpdate.Visible = false;
+            //        LinkLabel.Link link = new LinkLabel.Link();
+            //        link.LinkData = UPDATE_LINK;
+            //        llbUpdate.Links.Add(link);
+            //        llbUpdate.Visible = true;
+            //    }
+            //    else
+            //    {
+            //        lblUpdate.Text = "App up to date";
+            //    }
+            //}
+            //catch (Exception ex) when (ex is HttpRequestException || ex is Octokit.ApiException || ex is ArgumentException)
+            //{
+            //    lblUpdate.Text = "Update status unknown";
+            //}
+            lblUpdate.Text = "Update status unknown";
         }
 
         public async Task GetTreeView()
         {
-            await Dispatcher.CurrentDispatcher.Invoke(async () =>
+            //await Dispatcher.CurrentDispatcher.Invoke(async () =>
+            await Application.Instance.Invoke(async () =>
             {
                 try
                 {
@@ -99,12 +103,13 @@ namespace UXM
         }
 
 
-        private void llbUpdate_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void llbUpdate_LinkClicked(object sender, EventArgs e)
         {
-            Process.Start(e.Link.LinkData.ToString());
+            //Process.Start(e.Link.LinkData.ToString());
+            throw new NotImplementedException();
         }
 
-        private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
+        private void FormMain_FormClosing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             if (cts != null)
             {
@@ -116,16 +121,16 @@ namespace UXM
             }
             else
             {
-                settings.WindowMaximized = WindowState == FormWindowState.Maximized;
-                if (WindowState == FormWindowState.Normal)
+                settings.WindowMaximized = WindowState == WindowState.Maximized;
+                if (WindowState == WindowState.Normal)
                 {
-                    settings.WindowLocation = Location;
-                    settings.WindowSize = Size;
+                    settings.WindowLocation = new Point(Location.X, Location.Y);
+                    settings.WindowSize = new Size(Size.Width, Size.Height);
                 }
                 else
                 {
-                    settings.WindowLocation = RestoreBounds.Location;
-                    settings.WindowSize = RestoreBounds.Size;
+                    settings.WindowLocation = new Point(RestoreBounds.Location.X, RestoreBounds.Location.Y);
+                    settings.WindowSize = new Size(RestoreBounds.Size.Width, RestoreBounds.Size.Height);
                 }
 
                 try
@@ -136,6 +141,8 @@ namespace UXM
                 {
                     return;
                 }
+
+                Application.Instance.Quit();
             }
         }
 
@@ -148,18 +155,25 @@ namespace UXM
 
         private void btnBrowse_Click(object sender, EventArgs e)
         {
-            ofdExe.InitialDirectory = Path.GetDirectoryName(txtExePath.Text);
-            if (ofdExe.ShowDialog() == DialogResult.OK)
+            try
+            {
+                ofdExe.Directory = new Uri(Path.GetDirectoryName(txtExePath.Text));
+            }
+            catch
+            {
+                ofdExe.Directory = new Uri("/Users/");
+            }
+            if (ofdExe.ShowDialog(this) == DialogResult.Ok) //! this is parent?
                 txtExePath.Text = ofdExe.FileName;
         }
-
+         
         private void btnExplore_Click(object sender, EventArgs e)
         {
             string dir = Path.GetDirectoryName(txtExePath.Text);
             if (Directory.Exists(dir))
                 Process.Start(dir);
             else
-                SystemSounds.Hand.Play();
+                return;
         }
 
         private async void btnPatch_Click(object sender, EventArgs e)
@@ -179,7 +193,7 @@ namespace UXM
             }
             else
             {
-                SystemSounds.Asterisk.Play();
+                //SystemSounds.Asterisk.Play();
             }
 
             cts.Dispose();
@@ -193,7 +207,7 @@ namespace UXM
         private async void btnRestore_Click(object sender, EventArgs e)
         {
             DialogResult choice = MessageBox.Show("Restoring the game will delete any modified files you have installed.\n" +
-                "Do you want to proceed?", "Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                "Do you want to proceed?", "Warning", MessageBoxButtons.YesNo, MessageBoxType.Warning);
             if (choice == DialogResult.No)
                 return;
 
@@ -212,7 +226,7 @@ namespace UXM
             }
             else
             {
-                SystemSounds.Asterisk.Play();
+                //SystemSounds.Asterisk.Play();
             }
 
             cts.Dispose();
@@ -240,7 +254,7 @@ namespace UXM
             }
             else
             {
-                SystemSounds.Asterisk.Play();
+                //SystemSounds.Asterisk.Play();
             }
 
             cts.Dispose();
@@ -253,7 +267,7 @@ namespace UXM
 
         private void ShowError(string message)
         {
-            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(message, "Error", MessageBoxButtons.OK, MessageBoxType.Error);
         }
 
         private void EnableControls(bool enable)
@@ -271,20 +285,20 @@ namespace UXM
             if (report.value < 0 || report.value > 1)
                 throw new ArgumentOutOfRangeException("Progress value must be between 0 and 1, inclusive.");
 
-            int percent = (int)Math.Floor(report.value * pbrProgress.Maximum);
+            int percent = (int)Math.Floor(report.value * pbrProgress.MaxValue);
             pbrProgress.Value = percent;
             txtStatus.Text = report.status;
             if (TaskbarManager.IsPlatformSupported)
             {
-                TaskbarManager.Instance.SetProgressValue(percent, pbrProgress.Maximum);
-                if (percent == pbrProgress.Maximum && ActiveForm == this)
+                TaskbarManager.Instance.SetProgressValue(percent, pbrProgress.MaxValue);
+                if (percent == pbrProgress.MaxValue)//! && ActiveForm == this)
                     TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
             }
         }
 
         private void FormMain_Activated(object sender, EventArgs e)
         {
-            if (TaskbarManager.IsPlatformSupported && pbrProgress.Value == pbrProgress.Maximum)
+            if (TaskbarManager.IsPlatformSupported && pbrProgress.Value == pbrProgress.MaxValue)
             {
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
             }
@@ -292,7 +306,7 @@ namespace UXM
 
         private void cbxSkip_CheckedChanged(object sender, EventArgs e)
         {
-            ArchiveUnpacker.SetSkip(cbxSkip.Checked);
+            ArchiveUnpacker.SetSkip((bool)cbxSkip.Checked);
         }
 
         private FormFileView formFileView { get; set; }
@@ -300,7 +314,7 @@ namespace UXM
         private void btnView_Click(object sender, EventArgs e)
         {
             Enabled = false;
-            formFileView.ShowDialog();
+            formFileView.ShowAll();
             Enabled = true;
         }
 
@@ -309,7 +323,8 @@ namespace UXM
             if (!Path.IsPathRooted(txtExePath.Text))
                 return;
 
-            await Dispatcher.CurrentDispatcher.Invoke(async () =>
+            //await Dispatcher.CurrentDispatcher.Invoke(async () =>
+            await Application.Instance.Invoke(async () =>
             {
                     await GetTreeView();
             });

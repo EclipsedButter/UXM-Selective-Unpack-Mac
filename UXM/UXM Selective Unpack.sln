@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 25.0.1706.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UXM Selective Unpack", "UXM Selective Unpack.csproj", "{79FB6A40-053D-4D49-96AE-D1C7DAB3B81C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Release|Any CPU = Release|Any CPU
+		Debug|Any CPU = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{79FB6A40-053D-4D49-96AE-D1C7DAB3B81C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79FB6A40-053D-4D49-96AE-D1C7DAB3B81C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79FB6A40-053D-4D49-96AE-D1C7DAB3B81C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79FB6A40-053D-4D49-96AE-D1C7DAB3B81C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3E8B706D-A210-4464-98D2-30808599116F}
+	EndGlobalSection
+EndGlobal

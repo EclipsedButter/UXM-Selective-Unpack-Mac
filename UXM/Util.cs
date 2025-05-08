@@ -78,10 +78,16 @@ namespace UXM
 
         static (string, string)[] _pathValueTuple = new (string, string)[]
         {
+#if OS_MAC
+            (@$"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}/Library/Application Support/Steam/", "SteamPath"),
+#elif OS_LINUX
+            (@$"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}/.local/share/steam/", "SteamPath"),
+#elif OS_WINDOWS
         (@"HKEY_CURRENT_USER\SOFTWARE\Valve\Steam", "SteamPath"),
         (@"HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Valve\Steam", "InstallPath"),
         (@"HKEY_LOCAL_MACHINE\SOFTWARE\Valve\Steam", "InstallPath"),
         (@"HKEY_CURRENT_USER\SOFTWARE\Wow6432Node\Valve\Steam", "SteamPath"),
+#endif
         };
 
         // Improved detection from Gideon
@@ -92,10 +98,10 @@ namespace UXM
 
             string steamPath = GetSteamInstallPath();
 
-            if (string.IsNullOrWhiteSpace(steamPath) || !File.Exists($@"{steamPath}\SteamApps\libraryfolders.vdf"))
+            if (string.IsNullOrWhiteSpace(steamPath) || !File.Exists($@"{steamPath}/SteamApps/libraryfolders.vdf"))
                 return null;
 
-            string[] libraryFolders = File.ReadAllLines($@"{steamPath}\SteamApps\libraryfolders.vdf");
+            string[] libraryFolders = File.ReadAllLines($@"{steamPath}/SteamApps/libraryfolders.vdf");
 
             var pathStrings = libraryFolders.Where(str => str.Contains("\"path\""));
             var paths = pathStrings.Select(str =>
@@ -123,8 +129,10 @@ namespace UXM
 
             foreach ((string Path, string Value) pathValueTuple in _pathValueTuple)
             {
-                string registryKey = pathValueTuple.Path;
-                installPath = (string)Registry.GetValue(registryKey, pathValueTuple.Value, null);
+                //string registryKey = pathValueTuple.Path;
+                //installPath = (string)Registry.GetValue(registryKey, pathValueTuple.Value, null);
+                if (Path.Exists(Path.GetFullPath(pathValueTuple.Path)))
+                    installPath = Path.GetFullPath(pathValueTuple.Path);
 
                 if (installPath != null)
                     break;

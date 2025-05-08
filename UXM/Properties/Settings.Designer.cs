@@ -14,9 +14,14 @@ namespace UXM.Properties {
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "17.1.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
-        
-        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
-        
+
+        private static Settings defaultInstance = (Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings()));
+
+        public void QuitSave(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            this.Save();
+        }
+
         public static Settings Default {
             get {
                 return defaultInstance;
@@ -70,10 +75,10 @@ namespace UXM.Properties {
                 this["WindowMaximized"] = value;
             }
         }
-        
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("{0}\\steamapps\\common\\ELDEN RING\\Game\\eldenring.exe")]
+        [global::System.Configuration.DefaultSettingValueAttribute("{0}/steamapps/common/ELDEN RING/Game/eldenring.exe")]
         public string ExePath {
             get {
                 return ((string)(this["ExePath"]));

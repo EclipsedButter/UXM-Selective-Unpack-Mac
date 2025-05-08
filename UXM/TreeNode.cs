@@ -6,17 +6,38 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Data;
+//using System.Windows.Data;
+using Eto.Forms;
+using Eto.Drawing;
+using SoulsFormats;
+using System.Drawing;
 
 namespace UXM
 {
-    public class TreeNode : INotifyPropertyChanged
+    public class TreeNode : INotifyPropertyChanged, ITreeGridItem<TreeNode>
     {
         public ObservableCollection<TreeNode> Nodes { get; set; }
+        public ObservableCollection<TreeNode> Children => Nodes;
+        public static TreeNode TopClick = null;
         public string Name { get; set; }
-        public TreeNode Parent { get; }
-        public string FullPath => $"{Parent?.FullPath}/{Name}";
+        public TreeGridView Root = null;
+        public ITreeGridItem Parent { get; set;  }
+        public string FullPath => $"{(Parent as TreeNode)?.FullPath}/{Name}";
         public bool IsSound { get; set; }
+
+        public Image Image => null;
+        public string Text {
+            get {
+                return Name;
+            }
+            set {
+                Name = value;
+            }
+        }
+        public string Key => Name;
+        public int Count => Nodes.ToArray().Length;
+        public TreeNode this[int i] => Nodes[i];
+        public bool Expandable => Count > 0;
 
         private bool _visibility = true;
         public bool Visibility
@@ -40,6 +61,9 @@ namespace UXM
             {
                 if (SetField(ref _selected, value))
                 {
+                    if (TopClick is null)
+                        TopClick = this;
+
                     if (!_correcting)
                     {
                         foreach (TreeNode node in Nodes)
@@ -49,7 +73,13 @@ namespace UXM
                     }
                    
                     if (Parent != null && !Selected)
-                        Parent.CorrectCheckbox();
+                        (Parent as TreeNode).CorrectCheckbox();
+
+                    if (TopClick == this)
+                    {
+                        Root.ReloadData();
+                        TopClick = null;
+                    }
                 }
             }
         }

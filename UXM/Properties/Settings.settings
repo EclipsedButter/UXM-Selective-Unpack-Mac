@@ -15,7 +15,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ExePath" Type="System.String" Scope="User">
-      <Value Profile="(Default)">{0}\steamapps\common\ELDEN RING\Game\eldenring.exe</Value>
+      <Value Profile="(Default)">{0}/steamapps/common/ELDEN RING/Game/eldenring.exe</Value>
     </Setting>
   </Settings>
 </SettingsFile>

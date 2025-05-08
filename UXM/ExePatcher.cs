@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms;
+using Eto.Forms;
 
 namespace UXM
 {
@@ -32,7 +32,7 @@ namespace UXM
             if (game == Util.Game.Sekiro)
             {
                 DialogResult choice = MessageBox.Show("For Sekiro, most users should use Mod Engine instead of patching with UXM. Patching a vanilla exe will cause the game to crash on startup.\n" +
-                    "Are you sure you want to patch?", "Caution", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    "Are you sure you want to patch?", "Caution", MessageBoxButtons.YesNo, MessageBoxType.Warning);
                 if (choice == DialogResult.No)
                 {
                     progress.Report((1, "Patching cancelled."));

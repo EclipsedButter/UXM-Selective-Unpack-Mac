@@ -29,35 +29,38 @@ namespace UXM
         /// </summary>
         private void InitializeComponent()
         {
-            this.elementHost1 = new System.Windows.Forms.Integration.ElementHost();
+            //this.elementHost1 = new Eto.Forms.Integration.ElementHost();
             this.FileView = new UXM.FileView();
             this.SuspendLayout();
             // 
             // elementHost1
             // 
-            this.elementHost1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.elementHost1.Location = new System.Drawing.Point(0, 0);
-            this.elementHost1.Name = "elementHost1";
-            this.elementHost1.Size = new System.Drawing.Size(819, 515);
-            this.elementHost1.TabIndex = 0;
-            this.elementHost1.Text = "elementHost1";
-            this.elementHost1.Child = this.FileView;
+            //this.elementHost1.Dock = Eto.Forms.DockStyle.Fill;
+            //this.elementHost1.Location = new System.Drawing.Point(0, 0);
+            //this.elementHost1.Name = "elementHost1";
+            //this.elementHost1.Size = new System.Drawing.Size(819, 515);
+            //this.elementHost1.TabIndex = 0;
+            //this.elementHost1.Text = "elementHost1";
+            //this.elementHost1.Child = this.FileView;
             // 
             // FormFileView
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(819, 515);
-            this.Controls.Add(this.elementHost1);
-            this.Name = "FormFileView";
-            this.Text = "Select Files";
-            this.ResumeLayout(false);
+            //this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            //this.AutoScaleMode = Eto.Forms.AutoScaleMode.Font;
+            this.ClientSize = new Eto.Drawing.Size(819, 515);
+            this.Content = new Eto.Forms.PixelLayout();
+            var Controls = this.Content as Eto.Forms.PixelLayout;
+            //this.Controls.Add(this.elementHost1);
+            //Controls.Add(this.FileView, new Eto.Drawing.Point(0,0));
+            this.Tag = "FormFileView";
+            this.Title = "Select Files";
+            this.ResumeLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.Integration.ElementHost elementHost1;
+        //private Eto.Forms.Integration.ElementHost elementHost1;
         private FileView FileView;
     }
 }

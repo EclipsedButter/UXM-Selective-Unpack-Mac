@@ -8,8 +8,11 @@ using System.Xml.Linq;
 
 namespace UXM
 {
-
+#if DEBUG
+    public class GameInfo
+#else
     class GameInfo
+#endif
     {
         public long RequiredGB;
         public BHD5.Game BHD5Game;
@@ -19,7 +22,7 @@ namespace UXM
         public List<string> DeleteDirs;
         public List<string> Replacements;
         public List<string> Replace;
-        public static readonly string ExeDir = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+        public static readonly string ExeDir = AppDomain.CurrentDomain.BaseDirectory;
 
         public GameInfo(string xmlStr, string dictionaryStr, Util.Game game)
         {
@@ -41,9 +44,8 @@ namespace UXM
         {
 
             string prefix = GetPrefix(game);
-
-            string gameInfo = File.ReadAllText($@"{ExeDir}\res\{prefix}GameInfo.xml");
-            string dictionary = File.ReadAllText($@"{ExeDir}\res\{prefix}Dictionary.txt");
+            string gameInfo = File.ReadAllText($@"{ExeDir}/res/{prefix}GameInfo.xml");
+            string dictionary = File.ReadAllText($@"{ExeDir}/res/{prefix}Dictionary.txt");
 
             return new GameInfo(gameInfo, dictionary, game);
         }

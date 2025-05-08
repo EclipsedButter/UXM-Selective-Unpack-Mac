@@ -5,17 +5,18 @@ using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Eto.Forms;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+//using System.Windows.Controls;
+//using System.Windows.Data;
+//using System.Windows.Documents;
+//using System.Windows.Input;
+//using System.Windows.Media;
+//using System.Windows.Media.Imaging;
+//using System.Windows.Navigation;
+//using System.Windows.Shapes;
 using System.Linq;
 
 namespace UXM
@@ -23,7 +24,7 @@ namespace UXM
     /// <summary>
     /// Interaction logic for UserControl1.xaml
     /// </summary>
-    public partial class FileView : UserControl, INotifyPropertyChanged
+    public partial class FileView : Form, INotifyPropertyChanged
     {
         public string Prefix;
         public ObservableCollection<TreeNode> TreeNodesCollection { get; set; }
@@ -58,10 +59,14 @@ namespace UXM
         // parameter causes the property name of the caller to be substituted as an argument.
         private void OnPropertyChanged([CallerMemberName] string propertyName = "")
         {
+            TreeGridItemCollection foo = new();
+            foo.AddRange(TreeNodesCollection);
+            fileTree.DataStore = foo; //! who needs data binding
             if (PropertyChanged != null)
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
             }
+            fileTree.ReloadData();
         }
         protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
         {
@@ -89,9 +94,9 @@ namespace UXM
 
             Prefix = GameInfo.GetPrefix(game);
 
-            var fileList = File.ReadAllLines($@"{GameInfo.ExeDir}\res\{Prefix}Dictionary.txt").Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
+            var fileList = File.ReadAllLines($@"{GameInfo.ExeDir}res/{Prefix}Dictionary.txt").Where(s => !string.IsNullOrWhiteSpace(s)).ToArray();
 
-            Dispatcher.Invoke(() =>
+            Application.Instance.Invoke(() =>
             {
                 TreeNodesCollection = new ObservableCollection<TreeNode>(new List<TreeNode> { PopulateTreeNodes(fileList, @"/", Prefix) });
             });
@@ -103,7 +108,7 @@ namespace UXM
             if (paths == null)
                 return null;
 
-            TreeNode thisnode = new TreeNode(null, prefix, false);
+            TreeNode thisnode = new TreeNode(null, prefix, false) { Root = fileTree };
             TreeNode currentnode;
             char[] cachedpathseparator = pathSeparator.ToCharArray();
             bool sound = false;
@@ -123,7 +128,7 @@ namespace UXM
                 foreach (string subPath in newPath.Split(cachedpathseparator, StringSplitOptions.RemoveEmptyEntries))
                 {
                     if (currentnode[subPath] == null)
-                        currentnode.Nodes.Add(new TreeNode(currentnode, subPath, sound));
+                        currentnode.Nodes.Add(new TreeNode(currentnode, subPath, sound) { Root = fileTree });
 
                     currentnode = currentnode[subPath];
                 }
@@ -132,15 +137,15 @@ namespace UXM
             return thisnode;
         }
 
-        private void CheckBox_Checked(object sender, RoutedEventArgs e)
-        {
+        //private void CheckBox_Checked(object sender, RoutedEventArgs e)
+        //{
 
-        }
+        //}
 
-        private void TreeViewItem_Collapsed(object sender, RoutedEventArgs e)
-        {
-            (sender as TreeViewItem).IsExpanded = true;
-        }
+        //private void TreeViewItem_Collapsed(object sender, RoutedEventArgs e)
+        //{
+        //    (sender as TreeViewItem).IsExpanded = true;
+        //}
 
         public void FilterTreeView()
         {
@@ -150,21 +155,24 @@ namespace UXM
             }
         }
 
-        private void Ok_Click(object sender, RoutedEventArgs e)
+        private void Ok_Click(object sender, EventArgs e)
         {
-            Parent.SaveSelection();
+            (Parent as FormFileView).SaveSelection();
         }
 
-        private void SelectAll_Click(object sender, RoutedEventArgs e)
+        private void SelectAll_Click(object sender, EventArgs e)
         {
             TreeNodesCollection[0].Selected = true;
+            fileTree.ReloadData();
         }
 
-        private void Clear_Click(object sender, RoutedEventArgs e)
+        private void Clear_Click(object sender, EventArgs e)
         {
             TreeNodesCollection[0].Selected = true;
             TreeNodesCollection[0].Selected = false;
-            ItemFilter = "";
+            if (ItemFilter != "")
+                ItemFilter = "";
+            fileTree.ReloadData();
         }
 
         //private void Show_Click(object sender, RoutedEventArgs e)
@@ -188,7 +196,11 @@ namespace UXM
         //}
 
         FormFileView Parent { get; set; }
+#if DEBUG
+        public void SetParent(FormFileView formFileView)
+#else
         internal void SetParent(FormFileView formFileView)
+#endif
         {
             Parent = formFileView;
         }

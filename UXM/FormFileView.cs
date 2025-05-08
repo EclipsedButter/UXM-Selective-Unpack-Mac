@@ -7,7 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using Eto.Forms;
 
 namespace UXM
 {
@@ -27,6 +27,13 @@ namespace UXM
             FileView.SetParent(this);
         }
 
+        public void ShowAll()
+        {
+            //this.Show();
+            SetParent(FileView);
+            FileView.Show();
+        }
+
         public void PopulateTreeview(string exePath)
         {
             FileView.PopulateTreeview(exePath);
@@ -38,8 +45,9 @@ namespace UXM
         {
             SelectedFiles.Clear();
             AddSelectedFiles(FileView.TreeNodesCollection);
-            Parent.SetSkip(SelectedFiles.Any());
+            (Parent as FormMain).SetSkip(SelectedFiles.Any());
             Close();
+            FileView.Close();
         }
 
         private void AddSelectedFiles(IEnumerable<TreeNode> nodes)

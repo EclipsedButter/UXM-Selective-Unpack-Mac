@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using Eto.Forms;
 using Yabber;
 
 namespace UXM
@@ -84,9 +84,10 @@ namespace UXM
                 keys = ArchiveKeys.ArmoredCore6Keys;
             }
 
-            string drive = Path.GetPathRoot(Path.GetFullPath(gameDir));
-            DriveInfo driveInfo = new DriveInfo(drive);
-
+            DriveInfo driveInfo = DriveInfo.GetDrives().OrderByDescending(
+                j => j.RootDirectory.FullName.Count(
+                    v => v == '/')).First(
+                u => Path.GetFullPath(gameDir).Contains(u.RootDirectory.FullName));
             if (driveInfo.AvailableFreeSpace < gameInfo.RequiredGB * 1024 * 1024 * 1024)
             {
                 DialogResult choice = MessageBox.Show(
@@ -95,7 +96,7 @@ namespace UXM
                     "If you're only doing a partial unpack to restore some files you may ignore this warning, " +
                     "otherwise it will most likely fail.\r\n\r\n" +
                     "Do you want to continue?",
-                    "Space Warning", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    "Space Warning", MessageBoxButtons.YesNo, MessageBoxType.Warning);
 
                 if (choice == DialogResult.No)
                     return null;
@@ -112,15 +113,15 @@ namespace UXM
                     progress.Report(((1.0 + (double)i / gameInfo.BackupDirs.Count) / (gameInfo.Archives.Count + 2.0),
                         $"Backing up directory \"{backup}\" ({i + 1}/{gameInfo.BackupDirs.Count})..."));
 
-                    string backupSource = $@"{gameDir}\{backup}";
-                    string backupTarget = $@"{gameDir}\_backup\{backup}";
+                    string backupSource = $@"{gameDir}/{backup}";
+                    string backupTarget = $@"{gameDir}/_backup/{backup}";
 
                     if (Directory.Exists(backupSource) && !Directory.Exists(backupTarget))
                     {
                         foreach (string file in Directory.GetFiles(backupSource, "*", SearchOption.AllDirectories))
                         {
                             string relative = file.Substring(backupSource.Length + 1);
-                            string target = backupTarget + "\\" + relative;
+                            string target = backupTarget + "/" + relative;
                             Directory.CreateDirectory(Path.GetDirectoryName(target));
                             File.Copy(file, target);
                         }
@@ -169,16 +170,18 @@ namespace UXM
                     return IntPtr.Zero;
             }
 
+            if (!File.Exists(oodlePath))
+                oodlePath = Oodle.oodlePath;
 
             if (File.Exists(oodlePath))
             {
-                return Kernel32.LoadLibrary(oodlePath);
+                return LibDl.LoadLibrary(oodlePath);
             }
 
             oodlePath = Util.GetOodlePath();
             if (oodlePath != null)
             {
-                return Kernel32.LoadLibrary(oodlePath);
+                return LibDl.LoadLibrary(oodlePath);
             }
 
             return IntPtr.Zero;
@@ -188,14 +191,14 @@ namespace UXM
         {
             if (_oodlePtr != IntPtr.Zero)
             {
-                Kernel32.FreeLibrary(_oodlePtr);
+                LibDl.FreeLibrary(_oodlePtr);
                 return;
             }
 
-            IntPtr oodlePtr = Oodle.GetOodlePtr();
+            IntPtr oodlePtr = Oodle.GetOodlePtrStatic();
             if (oodlePtr != IntPtr.Zero)
             {
-                Kernel32.FreeLibrary(oodlePtr);
+                LibDl.FreeLibrary(oodlePtr);
                 return;
             }
         }
@@ -223,8 +226,8 @@ namespace UXM
             IProgress<(double value, string status)> progress, CancellationToken ct)
         {
             progress.Report(((index + 2.0) / (total + 2.0), $"Loading {archive}..."));
-            string bhdPath = $@"{gameDir}\{archive}.bhd";
-            string bdtPath = $@"{gameDir}\{archive}.bdt";
+            string bhdPath = $@"{gameDir}/{archive}.bhd";
+            string bdtPath = $@"{gameDir}/{archive}.bdt";
 
             if (gameVersion == BHD5.Game.DarkSouls1)
                 bhdPath += "5";
@@ -287,11 +290,11 @@ namespace UXM
                                 bool unknown;
                                 if (archiveDictionary.GetPath(header.FileNameHash, out path))
                                 {
-                                    if (archive == @"sd\sd")
-                                        path = $@"\sd\{path}";
+                                    if (archive == @"sd/sd")
+                                        path = $@"sd/{path}"; //! fixme
 
                                     unknown = false;
-                                    path = gameDir + path.Replace('/', '\\');
+                                    path = gameDir + path; //! .Replace('/', '\\');
                                     if (File.Exists(path))
                                         continue;
                                 }
@@ -301,9 +304,9 @@ namespace UXM
                                         continue;
 
                                     unknown = true;
-                                    string filename = $"{archive.Split('\\')[0]}_{header.FileNameHash:D10}"; //sad :(
-                                    string directory = $@"{gameDir}\_unknown";
-                                    path = $@"{directory}\{filename}";
+                                    string filename = $"{archive.Split('/')[0]}_{header.FileNameHash:D10}"; //sad :(
+                                    string directory = $@"{gameDir}/_unknown";
+                                    path = $@"{directory}/{filename}";
                                     if (File.Exists(path) || Directory.Exists(directory) && Directory.GetFiles(directory, $"{filename}.*").Length > 0)
                                         continue;
                                 }
@@ -332,7 +335,7 @@ namespace UXM
                                 try
                                 {
                                     bytes = header.ReadFile(bdtStream);
-                                    if (archive == @"sd\sd" && gameVersion >= BHD5.Game.EldenRing && bytes.Length > fileSize)
+                                    if (archive == @"sd/sd" && gameVersion >= BHD5.Game.EldenRing && bytes.Length > fileSize)
                                     {
                                         bytes = bytes.Take((int)fileSize).ToArray();
                                     }
