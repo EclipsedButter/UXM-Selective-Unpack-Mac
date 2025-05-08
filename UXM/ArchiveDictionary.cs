@@ -8,7 +8,7 @@ namespace UXM
 #if DEBUG
     public class ArchiveDictionary
 #else
-    class ArchiveDictoinary
+    class ArchiveDictionary
 #endif
     {
         private const uint PRIME = 37;
